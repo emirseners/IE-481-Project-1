@@ -157,20 +157,24 @@ def Tsp_Ip(graph, time_limit=3600, mip_gap=0.0001):
 
     return optimal_tour, model.objVal, model.Runtime
 
-def Max_N_in_Time(algo, time_limit=600, initial_n=200, step=5):
+def Max_N_in_Time(algo, time_limit=600, initial_n=300, step=2, trials=5):
     n = initial_n
     while True:
-        graph = Metric_Complete_Graph(n)
-        if algo == 'NN':
-            _, _, algorithm_time = Nearest_Neighbor_Algorithm(graph)
-        elif algo == 'Christofides':
-            _, _, algorithm_time = Christofides_Algorithm(graph)
-        elif algo == 'TSP IP':
-            _, _, algorithm_time = Tsp_Ip(graph)
-
-        if algorithm_time >= time_limit:
+        exceeded_count = 0
+        for _ in range(trials):
+            graph = Metric_Complete_Graph(n)
+            if algo == 'NN':
+                _, _, algorithm_time = Nearest_Neighbor_Algorithm(graph)
+            elif algo == 'Christofides':
+                _, _, algorithm_time = Christofides_Algorithm(graph)
+            elif algo == 'TSP IP':
+                _, _, algorithm_time = Tsp_Ip(graph)
+            if algorithm_time >= time_limit:
+                exceeded_count += 1
+        if exceeded_count == trials:
             return n - step
-        n += step
+        else:
+            n += step
 
 number_of_experiments = 10
 number_of_vertices = [10, 20, 50, 100, 200]
