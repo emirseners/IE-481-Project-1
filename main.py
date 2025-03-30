@@ -106,7 +106,7 @@ def Find_Subtour(edges, n):
 def Subtour_Elimination(model, where):
     if where == GRB.Callback.MIPSOL:
         values = model.cbGetSolution(model._x_ij)
-        edges = [(i, j) for i, j in model._x_ij.keys() if values[i, j] > 0.5]
+        edges = [(i, j) for i, j in model._x_ij.keys() if values[i, j] > 1e-5]
         subtour = Find_Subtour(edges, model._n)
         if len(subtour) < model._n:
             model.cbLazy(quicksum(model._x_ij[i, j] for i in subtour for j in subtour if i != j) <= len(subtour) - 1)
@@ -120,6 +120,7 @@ def Tsp_Ip(graph, time_limit=3600, mip_gap=0.0001):
     model.setParam('MIPGap', mip_gap)
     model.setParam('TimeLimit', time_limit)
     model.setParam('LazyConstraints', 1)
+    #model.setParam('Cuts', 3)
 
     x_ij = model.addVars([(i, j) for i in range(n) for j in range(n) if i != j], vtype=GRB.BINARY, name="x")
 
@@ -131,15 +132,11 @@ def Tsp_Ip(graph, time_limit=3600, mip_gap=0.0001):
     model._x_ij = x_ij
     model._n = n
 
-    start_time = time.time()
     model.optimize(Subtour_Elimination)
-    end_time = time.time()
-
-    optimization_time = end_time - start_time
     
     if model.status in (GRB.OPTIMAL, GRB.TIME_LIMIT, GRB.SUBOPTIMAL):
-        vals = model.getAttr('x', x_ij)
-        selected = tuplelist((i, j) for i, j in x_ij.keys() if vals[i, j] > 0.5)
+        vals = model.getAttr(GRB.Attr.X, x_ij)
+        selected = tuplelist((i, j) for i, j in x_ij.keys() if vals[i, j] > 1e-5)
         tour_dict = {i: j for i, j in selected}
         start = selected[0][0]
         optimal_tour = [start]
@@ -154,11 +151,11 @@ def Tsp_Ip(graph, time_limit=3600, mip_gap=0.0001):
 
         print(f'Optimal tour: {optimal_tour}')
         print(f'Optimal cost: {model.objVal}')
-        print(f'Optimization Time: {optimization_time:.2f} seconds')
+        print(f'Optimization Time: {model.Runtime:.2f} seconds')
     else:
         print("Infeasible")
 
-    return optimal_tour, model.objVal, optimization_time
+    return optimal_tour, model.objVal, model.Runtime
 
 def Max_N_in_Time(algo, time_limit=600, initial_n=200, step=5):
     n = initial_n
