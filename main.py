@@ -77,11 +77,11 @@ def Christofides_Algorithm(graph):                                 #Function to 
 
     graph_with_eulerian_circuit = nx.MultiGraph(minimum_spanning_tree)        #Define a MultiGraph object to be used as input for the Eulerian circuit
     graph_with_eulerian_circuit.add_edges_from(minc_perfect_matching)         #Add the edges of the minimum weight perfect matching to the MST to create a graph where the degree of all vertices are even. O(E)
-    eulerian_circuit = list(nx.eulerian_circuit(graph_with_eulerian_circuit)) #Find the Eulerian circuit of the graph. O(E)
+    eulerian_circuit = list(nx.eulerian_circuit(graph_with_eulerian_circuit)) #Find the Eulerian circuit of the graph. O(2V)
 
     visited = set()
     hamiltonian_tour = []
-    for u, _ in eulerian_circuit:          #Iterate through the edges of the Eulerian circuit and add the nodes to the Hamiltonian tour if they have not been visited yet.
+    for u, _ in eulerian_circuit:          #Iterate through the edges of the Eulerian circuit and add the nodes to the Hamiltonian tour if they have not been visited yet. O(2V)
         if u not in visited:               #If they have been visited, skip them. Since working on Metric Tsp instance, objective must be less than or equal to the circuit containing multiple visits.
             hamiltonian_tour.append(u)
             visited.add(u)
@@ -159,7 +159,7 @@ def Tsp_Ip(graph, time_limit=3600, mip_gap=0.0001):  #Function to implement the 
 
     return optimal_tour, model.objVal, model.Runtime
 
-def Max_N_in_Time(algo, time_limit=600, initial_n=300, step=2, trials=5):   #To find maximum n that can be solved within the time limit, the function takes the algorithm name, time limit,
+def Max_N_in_Time(algo, time_limit=600, initial_n=300, step=2, trials=3):   #To find maximum n that can be solved within the time limit, the function takes the algorithm name, time limit,
     n = initial_n           # initial n, step size and number of trials as input. The function returns the maximum n that can be solved within the time limit, but does not necessarily
     while True:             #have to stop when first time limit is reached. This is because omputational times vary experiment to experiment and we tried to forbid outlier cases where the algorithm takes much time.
         exceeded_count = 0  #n is increased by step size when the algorithm is able to solve the problem in defined time limit
@@ -178,8 +178,8 @@ def Max_N_in_Time(algo, time_limit=600, initial_n=300, step=2, trials=5):   #To 
         else:
             n += step
 
-number_of_experiments = 300
-number_of_vertices = [20, 50, 100]
+number_of_experiments = 10
+number_of_vertices = [20, 50, 100, 200, 300]
 algorithms = ['NN', 'Christofides', 'TSP IP']
 
 results = []
